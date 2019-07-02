@@ -20,8 +20,6 @@ uncpp'fied from [here](https://github.com/ROCm-Developer-Tools/LLVM-AMDGPU-Assem
 
 - [AMD Kernel Code Object Format](https://rocm-documentation.readthedocs.io/en/latest/ROCm_Compiler_SDK/ROCm-Codeobj-format.html)
 
-- [LLVM7](https://releases.llvm.org/download.html#7.0.0)
-
 - [Art of AMDGCN Assembly](https://gpuopen.com/amdgcn-assembly/)
 
 ### Why
