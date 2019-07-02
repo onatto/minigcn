@@ -22,4 +22,4 @@ uncpp'fied from [here](https://github.com/ROCm-Developer-Tools/LLVM-AMDGPU-Assem
 
 ## Why
 
-Because GCN is *awesome*. Thank you AMD for making such an amazing architecture and it's ISA and software open-source.
+Because GCN is *awesome*. Thank you AMD for making such an amazing architecture and its ISA and software open-source.
