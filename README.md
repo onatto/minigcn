@@ -8,7 +8,7 @@ uncpp'fied from [here](https://github.com/ROCm-Developer-Tools/LLVM-AMDGPU-Assem
 
 ### Dependencies
 
-- [ROCm](https://github.com/RadeonOpenCompute/ROCm).
+- [ROCm](https://github.com/RadeonOpenCompute/ROCm)
 
 - [LLVM7](https://releases.llvm.org/download.html#7.0.0) to compile the assembly (optional, precompiled asm included).
 
