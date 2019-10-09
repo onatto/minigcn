@@ -23,12 +23,17 @@ hello_world:
   // v3 = global-id.x
 
   s_load_dwordx2 s[0:1], s[0:1] 0x0
-  s_waitcnt lgkmcnt(0)
-  v_mov_b32 v1, s0                    // set address base for memory
-  v_mov_b32 v2, s1
-  v_mad_u32_u24 v3, 64, s2, v0        // v3 = 64*workgroup-id.x + local-id.x
-  v_mad_u32_u24 v1, v3, 4, v1         // v1 = v3*4 + v1
-  s_waitcnt 0 
-  flat_store_dword v[1:2], v3
-  s_waitcnt 0
-  s_endpgm
+  s_waitcnt      vmcnt(15) & lgkmcnt(0)
+  s_mov_b64      s[4:5], s[0:1]
+  s_add_u32      s0, s0, 0x8000
+  # s_nop          2
+  s_setpc_b64    s[4:5]
+  // s_waitcnt lgkmcnt(0)
+  // v_mov_b32 v1, s0                    // set address base for memory
+  // v_mov_b32 v2, s1
+  // v_mad_u32_u24 v3, 64, s2, v0        // v3 = 64*workgroup-id.x + local-id.x
+  // v_mad_u32_u24 v1, v3, 4, v1         // v1 = v3*4 + v1
+  // s_waitcnt 0 
+  // flat_store_dword v[1:2], v3
+  // s_waitcnt 0
+  // s_endpgm

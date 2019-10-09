@@ -16,6 +16,9 @@
 #define ROC_LOG(fmt, ...) fprintf(stderr, fmt, ##__VA_ARGS__)
 #define HSA_CHECK(fn) { hsa_status_t ss = fn; const char* str = 0; \
     if (ss != HSA_STATUS_SUCCESS) { hsa_status_string(ss, &str); ROC_LOG("%s", str); } }
+#define LOG(fmt, ...) ROC_LOG(fmt "\n", ##__VA_ARGS__)
+
+#define u4 uint32_t
 
 typedef enum {
     ROC_REGION_SYSTEM,
@@ -123,6 +126,12 @@ void* roc_alloc_memory(roc_agent_t* agent, roc_region_e region, int size) {
     return ptr;
 }
 
+void memsave(char *path, void* mem, int size) {
+    FILE* file = fopen(path, "wb");
+    fwrite(mem, size, 1, file);
+    fclose(file);
+}
+
 uint64_t roc_load_code(roc_agent_t* agent, void* ptr, int size, char* entry_kernel) {
     hsa_code_object_t code_object = {0};
     hsa_executable_t executable   = {0};
@@ -141,6 +150,9 @@ uint64_t roc_load_code(roc_agent_t* agent, void* ptr, int size, char* entry_kern
     uint64_t code_handle;
     HSA_CHECK(hsa_executable_symbol_get_info(kernel_symbol, HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_OBJECT, &code_handle));
     // HSA_CHECK(hsa_executable_symbol_get_info(kernel_symbol, HSA_EXECUTABLE_SYMBOL_INFO_KERNEL_GROUP_SEGMENT_SIZE, &group_static_size);
+    // LOG("%p", executable.handle);
+    // LOG("%p", code_handle);
+    // memsave("out.gcn", executable.handle, 128);
 
     return code_handle;
 }
@@ -265,8 +277,8 @@ int main(int argc, char** argv) {
     int MEMSIZE = 1024*1024;
 
     test_kernarg_t* kernarg = roc_alloc_memory(gpu, ROC_REGION_KERNARG  , MEMSIZE);
-    void* cpubuf            = roc_alloc_memory(gpu, ROC_REGION_LOCAL    , MEMSIZE);
-    void* gpubuf            = roc_alloc_memory(gpu, ROC_REGION_GPULOCAL , MEMSIZE);
+    char* cpubuf            = roc_alloc_memory(gpu, ROC_REGION_LOCAL    , MEMSIZE);
+    char* gpubuf            = roc_alloc_memory(gpu, ROC_REGION_GPULOCAL , MEMSIZE);
 
     kernarg->ptr = gpubuf;
 
@@ -280,14 +292,22 @@ int main(int argc, char** argv) {
         .kernarg        = kernarg,
     };
 
+    u4 nrawcode = 0;
+    void* rawcode = open_file("raw.gcn", &nrawcode);
+    LOG("%p %d", rawcode, nrawcode);
+    HSA_CHECK(hsa_memory_assign_agent(gpubuf, sys.cpu.agent, HSA_ACCESS_PERMISSION_RW));
+    HSA_CHECK(hsa_memory_copy(cpubuf, rawcode, nrawcode));
+    HSA_CHECK(hsa_memory_copy(gpubuf, cpubuf, nrawcode));
+    HSA_CHECK(hsa_memory_assign_agent(gpubuf, sys.gpu.agent, HSA_ACCESS_PERMISSION_RW));
+
     roc_dispatch(&queue, &dispatch);
     roc_wait(signal, 10);
 
     HSA_CHECK(hsa_memory_assign_agent(gpubuf, sys.cpu.agent, HSA_ACCESS_PERMISSION_RW));
     HSA_CHECK(hsa_memory_copy(cpubuf, gpubuf, MEMSIZE));
 
-    float* fcpubuf = cpubuf;
-    int*   icpubuf = cpubuf;
+    float* fcpubuf = cpubuf+0x8000;
+    int*   icpubuf = cpubuf+0x8000;
 
     forjj(128) {
         forii(16) {
